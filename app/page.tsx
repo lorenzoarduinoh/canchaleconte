@@ -1,49 +1,30 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Match, MatchStatus, DashboardStats } from '@/types';
 import { MatchDetail } from '@/components/MatchDetail';
 import { CreateMatchModal } from '@/components/CreateMatchModal';
 import { PlusIcon, CalendarIcon, UsersIcon, DollarSignIcon, TrophyIcon, CheckCircleIcon, AlertTriangleIcon } from '@/components/Icons';
-
-// --- MOCK DATA ---
-const INITIAL_MATCHES: Match[] = [
-  {
-    id: '1',
-    name: 'Futbol Sábado',
-    date: '2023-11-15',
-    time: '19:00',
-    pricePerPlayer: 3000,
-    maxPlayers: 10,
-    locationLink: 'https://www.google.com/maps',
-    status: MatchStatus.Finished,
-    players: Array(10).fill(null).map((_, i) => ({ id: `p${i}`, name: `Jugador ${i+1}`, phone: '1122334455', hasPaid: true })),
-    result: '5 - 3',
-    mvp: 'Lolo',
-    comments: 'Partidazo, Lolo la rompió toda.'
-  },
-  {
-    id: '2',
-    name: 'Torneo Quinta',
-    date: '2023-11-20',
-    time: '20:00',
-    pricePerPlayer: 3500,
-    maxPlayers: 12,
-    locationLink: 'https://www.google.com/maps',
-    status: MatchStatus.Open,
-    players: [
-      { id: 'p1', name: 'Santiago Leconte', phone: '1122334455', hasPaid: true },
-      { id: 'p2', name: 'Agustin Goldfard', phone: '1122334455', hasPaid: false },
-      { id: 'p3', name: 'Lolo', phone: '1122334455', hasPaid: false },
-    ]
-  }
-];
+import { matchService } from '@/services/matchService';
 
 export default function Home() {
-  const [matches, setMatches] = useState<Match[]>(INITIAL_MATCHES);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
+  // Load matches on mount
+  useEffect(() => {
+    loadMatches();
+  }, []);
+
+  const loadMatches = async () => {
+    setIsLoading(true);
+    const data = await matchService.getMatches();
+    setMatches(data);
+    setIsLoading(false);
+  };
 
   // Notification Helper
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -52,41 +33,52 @@ export default function Home() {
   };
 
   // Create Match
-  const handleCreateMatch = (newMatchData: Omit<Match, 'id' | 'players' | 'status'>) => {
-    const newMatch: Match = {
-      ...newMatchData,
-      id: Math.random().toString(36).substr(2, 9),
-      players: [],
-      status: MatchStatus.Open
-    };
-    setMatches([newMatch, ...matches]);
-    showNotification('Partido creado exitosamente', 'success');
+  const handleCreateMatch = async (newMatchData: Omit<Match, 'id' | 'players' | 'status'>) => {
+    const createdMatch = await matchService.createMatch(newMatchData);
+    if (createdMatch) {
+      setMatches([createdMatch, ...matches]);
+      showNotification('Partido creado exitosamente', 'success');
+    } else {
+      showNotification('Error al crear el partido', 'error');
+    }
   };
 
-  // Update Match
-  const handleUpdateMatch = (updatedMatch: Match) => {
+  // Update Match (Optimistic update + DB call)
+  const handleUpdateMatch = async (updatedMatch: Match) => {
+    // Optimistic update
     setMatches(matches.map(m => m.id === updatedMatch.id ? updatedMatch : m));
     setSelectedMatch(updatedMatch);
+
+    // DB Update
+    const success = await matchService.updateMatch(updatedMatch);
+    if (!success) {
+      showNotification('Error al guardar los cambios', 'error');
+      // Revert if needed, or just reload
+      loadMatches();
+    }
   };
 
   // Delete Match
-  const handleDeleteMatch = (matchId: string) => {
-    setMatches(matches.filter(m => m.id !== matchId));
-    setSelectedMatch(null);
-    showNotification('Partido eliminado', 'success');
+  const handleDeleteMatch = async (matchId: string) => {
+    const success = await matchService.deleteMatch(matchId);
+    if (success) {
+      setMatches(matches.filter(m => m.id !== matchId));
+      setSelectedMatch(null);
+      showNotification('Partido eliminado', 'success');
+    } else {
+      showNotification('Error al eliminar el partido', 'error');
+    }
   };
 
   // Stats Calculation
   const stats: DashboardStats = useMemo(() => {
     const finishedMatches = matches.filter(m => m.status === MatchStatus.Finished);
     const revenue = matches.reduce((acc, match) => {
-      // Don't count revenue from canceled matches (though they are deleted now)
       if (match.status === MatchStatus.Canceled) return acc;
       const paidPlayers = match.players.filter(p => p.hasPaid).length;
       return acc + (paidPlayers * match.pricePerPlayer);
     }, 0);
     const goals = finishedMatches.reduce((acc, m) => {
-      // Very naive parsing of "5 - 3"
       if (!m.result) return acc;
       const parts = m.result.split('-').map(s => parseInt(s.trim()));
       return acc + (parts[0] || 0) + (parts[1] || 0);
@@ -174,51 +166,59 @@ export default function Home() {
         {/* Matches List */}
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-primary">Partidos Recientes</h3>
-          <div className="grid grid-cols-1 gap-4">
-            {matches.map(match => (
-              <div 
-                key={match.id}
-                onClick={() => setSelectedMatch(match)}
-                className="group bg-surface border border-surface-dark/10 rounded-2xl p-5 cursor-pointer hover:border-success/50 hover:shadow-lg transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${
-                      match.status === MatchStatus.Finished ? 'bg-surface-dark text-secondary' : 
-                      match.status === MatchStatus.Canceled ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
-                    }`}>
-                      {new Date(match.date).getDate()}
+          {isLoading ? (
+            <div className="flex justify-center py-10 text-secondary">Cargando partidos...</div>
+          ) : matches.length === 0 ? (
+            <div className="text-center py-10 text-secondary bg-surface rounded-2xl border border-surface-dark/10">
+              No hay partidos creados aún.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {matches.map(match => (
+                <div 
+                  key={match.id}
+                  onClick={() => setSelectedMatch(match)}
+                  className="group bg-surface border border-surface-dark/10 rounded-2xl p-5 cursor-pointer hover:border-success/50 hover:shadow-lg transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${
+                        match.status === MatchStatus.Finished ? 'bg-surface-dark text-secondary' : 
+                        match.status === MatchStatus.Canceled ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
+                      }`}>
+                        {new Date(match.date).getDate()}
+                      </div>
+                      <div className={match.status === MatchStatus.Canceled ? 'opacity-50' : ''}>
+                        <h4 className="font-bold text-lg text-primary group-hover:text-success transition-colors">
+                          {match.name}
+                          {match.status === MatchStatus.Canceled && <span className="ml-2 text-xs font-normal text-danger">(Cancelado)</span>}
+                        </h4>
+                        <p className="text-secondary text-sm flex items-center gap-2">
+                          {match.time}hs • {match.players.length}/{match.maxPlayers} Jugadores
+                        </p>
+                      </div>
                     </div>
-                    <div className={match.status === MatchStatus.Canceled ? 'opacity-50' : ''}>
-                      <h4 className="font-bold text-lg text-primary group-hover:text-success transition-colors">
-                        {match.name}
-                        {match.status === MatchStatus.Canceled && <span className="ml-2 text-xs font-normal text-danger">(Cancelado)</span>}
-                      </h4>
-                      <p className="text-secondary text-sm flex items-center gap-2">
-                        {match.time}hs • {match.players.length}/{match.maxPlayers} Jugadores
-                      </p>
+                    <div className="flex flex-col items-end">
+                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeStyles(match.status)}`}>
+                          {match.status.toUpperCase()}
+                        </span>
+                        {match.result && match.status === MatchStatus.Finished && <span className="text-sm font-bold text-primary mt-1">{match.result}</span>}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeStyles(match.status)}`}>
-                        {match.status.toUpperCase()}
-                      </span>
-                      {match.result && match.status === MatchStatus.Finished && <span className="text-sm font-bold text-primary mt-1">{match.result}</span>}
-                  </div>
+                  
+                  {/* Mini Progress Bar for Players */}
+                  {match.status !== MatchStatus.Canceled && (
+                    <div className="mt-4 w-full bg-surface-dark/10 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-success transition-all duration-500" 
+                        style={{ width: `${(match.players.length / match.maxPlayers) * 100}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
-                
-                {/* Mini Progress Bar for Players */}
-                {match.status !== MatchStatus.Canceled && (
-                  <div className="mt-4 w-full bg-surface-dark/10 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-success transition-all duration-500" 
-                      style={{ width: `${(match.players.length / match.maxPlayers) * 100}%` }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </main>

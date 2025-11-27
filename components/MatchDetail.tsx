@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Match, Player, MatchStatus } from '../types';
 import { generateMatchSummary } from '../services/geminiService';
 import { BotIcon, CheckCircleIcon, ShareIcon, UsersIcon, MapPinIcon, TrashIcon, AlertTriangleIcon } from './Icons';
+import { matchService } from '../services/matchService';
 
 interface MatchDetailProps {
   match: Match;
@@ -21,11 +22,25 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
   const paidCount = match.players.filter(p => p.hasPaid).length;
   const revenue = paidCount * match.pricePerPlayer;
 
-  const handleTogglePaid = (playerId: string) => {
+  const handleTogglePaid = async (playerId: string) => {
+    const player = match.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const newStatus = !player.hasPaid;
+    
+    // Optimistic update locally
     const updatedPlayers = match.players.map(p => 
-      p.id === playerId ? { ...p, hasPaid: !p.hasPaid } : p
+      p.id === playerId ? { ...p, hasPaid: newStatus } : p
     );
     onUpdateMatch({ ...match, players: updatedPlayers });
+
+    // Persist to DB
+    const success = await matchService.updatePlayerPayment(playerId, newStatus);
+    if (!success) {
+        // Revert if failed (optional, but good practice)
+        onShowNotification('Error al actualizar el pago', 'error');
+        onUpdateMatch({ ...match, players: match.players }); // Revert to original
+    }
   };
 
   const handleGenerateSummary = async () => {

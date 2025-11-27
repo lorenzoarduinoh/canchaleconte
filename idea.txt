@@ -1,0 +1,117 @@
+CANCHA LECONTE
+
+Mis amigos Santiago Leconte y Agustin Goldfard tienen una cancha de Futbol en su quinta. Quiero hacer un proyecto de software (pagina web) para que puedan administrar la misma de una manera fácil y sencilla. La idea es que mediante la página puedan crear partidos definiendo, horario, precio, fecha, cantidad de jugadores, y nombre del partido. Una vez creado el partido lo podrán compartir mediante un link al grupo de whatsapp de mis amigos, cada amigo podrá inscribirse al partido ingresando su nombre y número de teléfono. Una vez que un amigo se inscriba, recibirá un mensaje de whatsapp confirmando su inscripción con un link para gestionar la misma, donde podrá ver los detalles del partido y podrá darse de baja si lo desea. Una vez que el partido haya terminado, se enviará automáticamente un mensaje de whatsapp a los participantes con el link de mercado pago para que paguen la cancha, en caso de que pasen 24hs y no hayan pagado se les enviará un recordatorio. Santiago y Agustin podrán ver la lista de jugadores inscriptos a cada partido, además podrán ver cuales de esos jugadores pagaron y cuáles no al finalizar el mismo. También podrán agregar comentarios a los partidos ej: “hoy lolo jugó muy bien” y registrar el resultado del mismo si lo desean. Dos horas antes del partido todos los participantes recibirán un mensaje de recordatorio con un link de google maps con la ubicación de la cancha. Santiago y agustín podrán ver estadísticas como, cuantos partidos se jugaron en la cancha, cuantos goles se hicieron, cuánto llevan recaudado, además del historial de partidos, cada uno con su detalle 
+
+STACK TECNOLOGICO 
+
+Categoría
+Tecnología
+Por qué elegirla para este proyecto
+Framework Web
+Next.js 14+ (App Router)
+Lo pediste y es el estándar. El App Router facilita manejar las rutas de API para los webhooks de Mercado Pago y los Cron Jobs.
+Base de Datos & Auth
+Supabase
+Backend-as-a-Service ideal. Te da la base de datos (PostgreSQL), autenticación (para Santiago y Agustín) y almacenamiento de datos en tiempo real sin configurar servidores.
+Estilos & UI
+Tailwind CSS + shadcn/ui
+Clave para ir rápido. shadcn/ui te da componentes ya hechos (tablas para ver pagos, inputs, calendarios, diálogos) que copias y pegas. No pierdas tiempo diseñando botones desde cero.
+Integración WhatsApp
+Meta WhatsApp Cloud API
+Para enviar mensajes programados y automáticos de forma fiable, esta es la oficial. Tiene una capa gratuita (aprox 1000 conversaciones/mes) que sobra para una sola cancha.
+Pagos
+Mercado Pago SDK
+Necesitas generar "Preferencias de Pago" y recibir la confirmación (Webhooks) para cambiar el estado de "No pagó" a "Pagó" automáticamente.
+Automatización (Cron)
+Vercel Cron o Supabase Edge
+Necesario para los recordatorios ("2 horas antes", "24hs después"). Disparan una función en tu API que chequea la BD y envía los mensajes.
+Mapas
+Google Maps (URL estática)
+No necesitas la API de Google Maps (que es cara/compleja). Solo necesitas generar un link con coordenadas: https://www.google.com/maps/search/?api=1&query=LAT,LONG.
+Despliegue (Hosting)
+Vercel
+La casa de Next.js. Gratuito para proyectos personales, despliegue con un clic y maneja HTTPS automático.
+
+
+
+COLORES DE LA PAGINA 
+
+Rol / Variable CSS
+Color
+Valor Tema Claro
+Valor Tema Oscuro
+Uso Sugerido
+Fondos
+
+
+
+
+
+
+
+
+--bg-light
+⚪️
+hsl(0, 0%, 100%)
+hsl(0, 0%, 10%)
+elementos
+--bg
+⚪️
+hsl(0, 0%, 95%)
+hsl(0, 0%, 5%)
+Fondo de tarjetas
+--bg-dark
+⚫️
+hsl(0, 0%, 90%)
+hsl(0, 0%, 0%)
+Fondo principal 
+Textos
+
+
+
+
+
+
+
+
+--text-primary
+⚫️
+hsl(0, 0%, 5%)
+hsl(0, 0%, 95%)
+Títulos y texto importante
+--text-secondary
+⚫️
+hsl(0, 0%, 30%)
+hsl(0, 0%, 70%)
+Párrafos y texto secundario
+Colores Semánticos
+
+
+
+
+
+
+
+
+--color-success
+🟢
+hsl(145, 65%, 42%)
+hsl(145, 60%, 55%)
+Acciones de éxito, confirmación
+--color-info
+🔵
+hsl(210, 90%, 50%)
+hsl(210, 95%, 68%)
+Mensajes informativos, banners
+--color-warning
+🟠
+hsl(35, 95%, 50%)
+hsl(35, 95%, 65%)
+Alertas, advertencias
+--color-danger
+🔴
+hsl(0, 85%, 55%)
+hsl(0, 90%, 68%)
+Errores, acciones de cancelación
+
+
