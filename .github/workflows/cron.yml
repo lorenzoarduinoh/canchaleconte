@@ -12,4 +12,5 @@ jobs:
     steps:
       - name: Call Vercel API Route
         run: |
-          curl -X GET ${{ secrets.VERCEL_APP_URL }}/api/cron/notifications
+          curl -X GET ${{ secrets.VERCEL_APP_URL }}/api/cron/notifications \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

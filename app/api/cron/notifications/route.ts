@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/services/supabase';
 import { whatsappService } from '@/services/whatsappService';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
+        const headersList = await headers();
+        const authHeader = headersList.get('authorization');
+        
+        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         
         // Fetch matches for today that are Open or Full
