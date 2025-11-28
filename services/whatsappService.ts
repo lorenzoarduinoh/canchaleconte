@@ -10,20 +10,18 @@ export const whatsappService = {
         return;
     }
 
-    // Format phone number: remove non-digits. 
-    // If it starts with '11' (Buenos Aires) and no country code, add '549' (Argentina mobile).
-    // This is a basic heuristic.
+    // Format phone number logic for Argentina
     let cleanPhone = to.replace(/\D/g, '');
-    if (cleanPhone.length === 10 && cleanPhone.startsWith('11')) {
-        cleanPhone = '549' + cleanPhone;
-    } else if (!cleanPhone.startsWith('54')) {
-        // If it doesn't start with 54, we might want to assume Argentina or handle it.
-        // For now, let's assume the user inputs it correctly or we just send to what we have if it looks like an international number.
-        // Commonly users enter '11...' for local.
-        if (cleanPhone.length === 10) {
-            cleanPhone = '549' + cleanPhone; 
-        }
-    }
+
+    // TEST: Try sending WITHOUT '9' to see if it matches the Sandbox list format better.
+    // If cleanPhone is 10 digits (e.g. 3794557442), just add 54.
+    if (cleanPhone.length === 10) {
+        cleanPhone = '54' + cleanPhone;
+    } 
+    // If it already has 549... try removing the 9? Let's stick to the simple 54 + 10 digits first.
+    
+    // Log for debugging
+    console.log(`Sending WhatsApp to: ${cleanPhone} (Original: ${to})`);
 
     try {
         const response = await fetch(`${WHATSAPP_API_URL}/${PHONE_NUMBER_ID}/messages`, {
@@ -38,7 +36,7 @@ export const whatsappService = {
                 type: 'template',
                 template: {
                     name: templateName,
-                    language: { code: 'es_AR' },
+                    language: { code: 'en' },
                     components: components
                 }
             })
