@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Match, Player, MatchStatus } from '../types';
 import { generateMatchSummary } from '../services/geminiService';
@@ -68,12 +70,13 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
     onClose();
   };
 
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/match/${match.id}` : '';
   const shareText = `⚽ *${match.name}*
 📅 ${new Date(match.date).toLocaleDateString()} a las ${match.time}
 📍 Cancha Leconte
 💰 $${match.pricePerPlayer}
 
-Sumate acá: [Link Simulado]`;
+Sumate acá: ${shareUrl}`;
 
   const handleShare = () => {
     const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;

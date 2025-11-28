@@ -6,6 +6,7 @@ import { MatchDetail } from '@/components/MatchDetail';
 import { CreateMatchModal } from '@/components/CreateMatchModal';
 import { PlusIcon, CalendarIcon, UsersIcon, DollarSignIcon, TrophyIcon, CheckCircleIcon, AlertTriangleIcon } from '@/components/Icons';
 import { matchService } from '@/services/matchService';
+import { updateMatchAction } from '@/app/actions';
 
 export default function Home() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -50,8 +51,8 @@ export default function Home() {
     setSelectedMatch(updatedMatch);
 
     // DB Update
-    const success = await matchService.updateMatch(updatedMatch);
-    if (!success) {
+    const result = await updateMatchAction(updatedMatch);
+    if (!result.success) {
       showNotification('Error al guardar los cambios', 'error');
       // Revert if needed, or just reload
       loadMatches();

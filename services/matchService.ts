@@ -44,6 +44,24 @@ export const matchService = {
     return data.map(mapMatchFromDB);
   },
 
+  async getMatchById(matchId: string): Promise<Match | null> {
+    const { data, error } = await supabase
+      .from('matches')
+      .select(`
+        *,
+        players (*)
+      `)
+      .eq('id', matchId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching match by id:', error);
+      return null;
+    }
+
+    return mapMatchFromDB(data);
+  },
+
   async createMatch(match: Omit<Match, 'id' | 'players' | 'status'>): Promise<Match | null> {
     const { data, error } = await supabase
       .from('matches')
@@ -135,6 +153,19 @@ export const matchService = {
     
     if (error) {
       console.error('Error updating payment:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async removePlayer(playerId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('players')
+      .delete()
+      .eq('id', playerId);
+
+    if (error) {
+      console.error('Error removing player:', error);
       return false;
     }
     return true;
