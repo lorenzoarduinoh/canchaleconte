@@ -11,7 +11,8 @@ import {
   MapPinIcon, 
   CalendarIcon, 
   DollarSignIcon,
-  TrashIcon
+  TrashIcon,
+  UsersIcon
 } from '@/components/Icons';
 
 export default function PlayerManagePage() {
@@ -71,111 +72,162 @@ export default function PlayerManagePage() {
         }
     };
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center text-primary">Cargando...</div>;
+    if (isLoading) {
+        return (
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="animate-pulse text-primary font-bold">Cargando tu información...</div>
+          </div>
+        );
+    }
     
     if (!match || !player) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-                <h1 className="text-xl font-bold text-danger">No se encontró tu inscripción</h1>
-                <p className="text-secondary">Puede que hayas sido eliminado o el partido no exista.</p>
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
+                <AlertTriangleIcon className="w-12 h-12 text-danger mb-4" />
+                <h1 className="text-2xl font-bold text-primary">No se encontró tu inscripción</h1>
+                <p className="text-secondary mt-2">Puede que hayas sido eliminado o el partido no exista.</p>
             </div>
         );
     }
 
     const isMatchFinished = match.status === MatchStatus.Finished;
-    
+    const progress = (match.players.length / match.maxPlayers) * 100;
+
     return (
-        <div className="min-h-screen bg-background font-sans text-primary p-4 flex flex-col items-center">
-            <div className="w-full max-w-md bg-surface rounded-2xl shadow-xl border border-surface-dark/10 overflow-hidden">
-                
-                <div className="bg-primary/5 p-6 text-center border-b border-surface-dark/10">
-                    <h1 className="text-2xl font-black text-primary mb-1">Gestionar Asistencia</h1>
-                    <p className="text-secondary text-sm font-medium">Hola, <span className="text-primary font-bold">{player.name}</span></p>
+        <div className="min-h-screen bg-background font-sans text-primary">
+            {/* Navbar Minimal (Igual a la inscripción) */}
+            <nav className="w-full bg-surface/80 backdrop-blur-md border-b border-surface-dark/10 sticky top-0 z-10">
+                <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-center">
+                <h1 className="text-lg font-black tracking-tighter">
+                    CANCHA <span className="text-success">LECONTE</span>
+                </h1>
                 </div>
+            </nav>
 
-                <div className="p-6 space-y-6">
-                    {/* Payment Status Notification */}
-                    {paymentStatus === 'success' && (
-                        <div className="bg-success/10 text-success p-4 rounded-xl flex items-center gap-3 mb-4 animate-pulse">
-                            <CheckCircleIcon className="w-6 h-6" />
-                            <span className="font-bold">¡Pago realizado con éxito!</span>
+            <main className="max-w-md mx-auto px-4 py-8">
+                <div className="bg-surface rounded-2xl shadow-xl border border-surface-dark/10 overflow-hidden">
+                    
+                    {/* Header Card */}
+                    <div className="bg-surface-dark/5 p-6 border-b border-surface-dark/10 text-center">
+                        <div className="flex justify-center gap-2 mb-3">
+                            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-primary/5 text-primary">
+                                {match.status.toUpperCase()}
+                            </span>
+                            {player.hasPaid && (
+                                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-success text-white shadow-sm shadow-success/30">
+                                    PAGADO
+                                </span>
+                            )}
                         </div>
-                    )}
+                        <h2 className="text-2xl font-black text-primary leading-tight mb-1">{match.name}</h2>
+                        <p className="text-secondary font-medium text-sm">
+                            Hola, <span className="text-primary font-bold">{player.name}</span>
+                        </p>
+                    </div>
 
-                     {paymentStatus === 'failure' && (
-                        <div className="bg-danger/10 text-danger p-4 rounded-xl flex items-center gap-3 mb-4">
-                            <AlertTriangleIcon className="w-6 h-6" />
-                            <span className="font-bold">El pago falló. Intenta nuevamente.</span>
-                        </div>
-                    )}
+                    <div className="p-6 space-y-6">
 
-                    {/* Match Details */}
-                    <div className="space-y-3">
-                        <h2 className="text-lg font-bold text-primary border-b border-surface-dark/10 pb-2">Detalles del Partido</h2>
+                         {/* Payment Status Notification */}
+                        {paymentStatus === 'success' && (
+                            <div className="p-3 bg-success/10 text-success text-sm font-bold rounded-xl flex items-center gap-3 animate-in fade-in zoom-in duration-500">
+                                <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
+                                <span>¡Pago registrado correctamente!</span>
+                            </div>
+                        )}
+                        {paymentStatus === 'failure' && (
+                            <div className="p-3 bg-danger/10 text-danger text-sm font-bold rounded-xl flex items-center gap-3 animate-in fade-in zoom-in duration-500">
+                                <AlertTriangleIcon className="w-5 h-5 flex-shrink-0" />
+                                <span>El pago no se pudo completar.</span>
+                            </div>
+                        )}
+
+                        {/* Info Grid (Igual a inscripción) */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-surface-dark/5 p-3 rounded-xl">
-                                <div className="text-xs text-secondary uppercase font-bold flex items-center gap-1">
-                                    <CalendarIcon className="w-3 h-3"/> Fecha
+                            <div className="flex flex-col gap-1 p-3 bg-surface-dark/5 rounded-xl">
+                                <div className="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider">
+                                <CalendarIcon className="w-4 h-4" /> Fecha
                                 </div>
-                                <div className="font-bold">{new Date(match.date).toLocaleDateString()} {match.time}</div>
+                                <div className="font-bold text-primary text-sm">
+                                {new Date(match.date).toLocaleDateString()}
+                                <br/>
+                                <span className="font-normal text-secondary">{match.time} hs</span>
+                                </div>
                             </div>
-                            <div className="bg-surface-dark/5 p-3 rounded-xl">
-                                <div className="text-xs text-secondary uppercase font-bold flex items-center gap-1">
-                                    <MapPinIcon className="w-3 h-3"/> Lugar
+                            <div className="flex flex-col gap-1 p-3 bg-surface-dark/5 rounded-xl">
+                                <div className="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider">
+                                <DollarSignIcon className="w-4 h-4" /> Precio
                                 </div>
-                                <a href={match.locationLink} target="_blank" className="font-bold underline text-primary truncate block">Ver Mapa</a>
+                                <div className="font-bold text-success text-lg">
+                                ${match.pricePerPlayer}
+                                </div>
                             </div>
                         </div>
+
+                        <div className="flex items-center gap-3 p-3 bg-info/10 text-info rounded-xl">
+                            <MapPinIcon className="w-5 h-5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold uppercase tracking-wider opacity-70">Ubicación</p>
+                                <a 
+                                    href={match.locationLink} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="font-bold hover:underline truncate block text-sm"
+                                >
+                                    Ver en Google Maps
+                                </a>
+                            </div>
+                        </div>
+
+                         {/* Payment Logic Section */}
+                        <div className="pt-2">
+                            {player.hasPaid ? (
+                                <div className="text-center space-y-2 py-4 border-2 border-dashed border-success/20 rounded-xl bg-success/5">
+                                    <div className="w-12 h-12 bg-success rounded-full flex items-center justify-center mx-auto shadow-lg shadow-success/30">
+                                        <CheckCircleIcon className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-success">Todo listo</h3>
+                                        <p className="text-secondary text-xs">Ya cubriste tu parte del partido.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={handlePayment}
+                                        disabled={isPaying}
+                                        className="w-full bg-[#009EE3] text-white font-bold py-3.5 rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isPaying ? 'Procesando...' : 'Pagar con Mercado Pago'}
+                                    </button>
+                                    <p className="text-[10px] text-center text-secondary opacity-70">
+                                        Pagos seguros procesados por Mercado Pago.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <hr className="border-surface-dark/10" />
+
+                        {/* Danger Zone */}
+                        {!isMatchFinished && !player.hasPaid && (
+                            <div className="text-center">
+                                <button 
+                                    onClick={handleUnsubscribe}
+                                    disabled={isDeleting}
+                                    className="text-danger text-xs font-bold hover:underline flex items-center justify-center gap-1 mx-auto disabled:opacity-50"
+                                >
+                                    <TrashIcon className="w-3 h-3" />
+                                    {isDeleting ? 'Procesando...' : 'Cancelar mi asistencia'}
+                                </button>
+                            </div>
+                        )}
                     </div>
-
-                    {/* Payment Section */}
-                    <div className="space-y-3">
-                         <h2 className="text-lg font-bold text-primary border-b border-surface-dark/10 pb-2">Estado de Pago</h2>
-                         
-                         {player.hasPaid ? (
-                             <div className="flex flex-col items-center justify-center p-6 bg-success/5 rounded-xl border border-success/20">
-                                 <div className="w-12 h-12 bg-success rounded-full flex items-center justify-center mb-2 shadow-lg shadow-success/30">
-                                     <CheckCircleIcon className="w-6 h-6 text-white" />
-                                 </div>
-                                 <span className="text-xl font-black text-success">PAGADO</span>
-                                 <p className="text-xs text-secondary mt-1">Gracias por cumplir.</p>
-                             </div>
-                         ) : (
-                             <div className="space-y-3">
-                                 <div className="flex justify-between items-center p-3 bg-surface-dark/5 rounded-xl">
-                                     <span className="font-bold text-secondary">Monto a pagar</span>
-                                     <span className="text-xl font-black text-primary">${match.pricePerPlayer}</span>
-                                 </div>
-                                 
-                                 <button 
-                                    onClick={handlePayment}
-                                    disabled={isPaying}
-                                    className="w-full py-4 bg-[#009EE3] text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                                 >
-                                     {isPaying ? 'Procesando...' : 'Pagar con Mercado Pago'}
-                                 </button>
-                                 <p className="text-xs text-center text-secondary">
-                                     Serás redirigido a Mercado Pago para completar la transacción de forma segura.
-                                 </p>
-                             </div>
-                         )}
-                    </div>
-
-                    <hr className="border-surface-dark/10"/>
-
-                    {/* Danger Zone */}
-                    {!isMatchFinished && !player.hasPaid && (
-                        <button 
-                            onClick={handleUnsubscribe}
-                            disabled={isDeleting}
-                            className="w-full py-3 bg-transparent border border-danger/20 text-danger font-bold rounded-xl hover:bg-danger/5 transition-all flex items-center justify-center gap-2"
-                        >
-                            <TrashIcon className="w-4 h-4" />
-                            {isDeleting ? 'Dando de baja...' : 'Darme de baja del partido'}
-                        </button>
-                    )}
                 </div>
-            </div>
+
+                <p className="text-center text-secondary text-xs mt-8 opacity-50">
+                    &copy; {new Date().getFullYear()} Cancha Leconte
+                </p>
+            </main>
         </div>
     );
 }
