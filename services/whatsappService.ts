@@ -13,12 +13,15 @@ export const whatsappService = {
     // Format phone number logic for Argentina
     let cleanPhone = to.replace(/\D/g, '');
 
-    // TEST: Try sending WITHOUT '9' to see if it matches the Sandbox list format better.
-    // If cleanPhone is 10 digits (e.g. 3794557442), just add 54.
+    // Logic to ensure Argentina mobile numbers have the '9' prefix (54 9 ...)
     if (cleanPhone.length === 10) {
-        cleanPhone = '54' + cleanPhone;
-    } 
-    // If it already has 549... try removing the 9? Let's stick to the simple 54 + 10 digits first.
+        // Case: Local number (e.g., 3794557442) -> Add 549
+        cleanPhone = '549' + cleanPhone;
+    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('54') && !cleanPhone.startsWith('549')) {
+        // Case: Number with country code but missing mobile prefix (e.g., 543794557442) -> Insert 9
+        cleanPhone = '549' + cleanPhone.substring(2);
+    }
+    // If it already has 13 digits (549...) or follows another format, leave it.
     
     // Log for debugging
     console.log(`Sending WhatsApp to: ${cleanPhone} (Original: ${to})`);
