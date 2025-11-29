@@ -29,6 +29,10 @@ export default function PlayerManagePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isPaying, setIsPaying] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    
+    // Confirmation Modal State
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [isClosingConfirm, setIsClosingConfirm] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -58,17 +62,38 @@ export default function PlayerManagePage() {
         }
     };
 
-    const handleUnsubscribe = async () => {
-        if (!confirm('¿Estás seguro que deseas darte de baja del partido?')) return;
-        
+    const handleCloseConfirm = () => {
+        setIsClosingConfirm(true);
+        setTimeout(() => {
+            setShowCancelConfirm(false);
+            setIsClosingConfirm(false); // Reset for next time
+        }, 200);
+    };
+
+    const handleUnsubscribeClick = () => {
+        setShowCancelConfirm(true);
+    };
+
+    const confirmUnsubscribe = async () => {
         setIsDeleting(true);
+        // Close modal immediately or keep it open? 
+        // Better UX: Keep modal open but show loading state there, or close and show generic loading.
+        // Let's close it to show the main button loading state or a global loader. 
+        // Actually, let's execute while modal is open or just close and show spinner on the main screen.
+        // Given the current UI structure, let's close the modal and let the button on the main screen (if visible) or a global overlay show progress.
+        // However, since we are removing the player, we might just want to show "Deleting..." inside the modal.
+        
+        // Simple approach: Close modal, set isDeleting, show spinner on main screen button (if it were visible, but the modal blocks it).
+        // Let's execute logic then redirect.
+        
         const result = await removePlayerAction(matchId, playerId);
         if (result.success) {
-            alert('Te has dado de baja exitosamente.');
+            handleCloseConfirm(); // Close modal
             router.push(`/match/${matchId}`); // Go back to match page
         } else {
             alert('Error al darse de baja.');
             setIsDeleting(false);
+            handleCloseConfirm();
         }
     };
 
@@ -119,7 +144,7 @@ export default function PlayerManagePage() {
                                 </span>
                             )}
                         </div>
-                        <h2 className="text-2xl font-black text-primary leading-tight mb-1">{match.name}</h2>
+                        <h2 className="text-3xl font-black text-primary leading-tight mb-1">{match.name}</h2>
                         <p className="text-secondary font-medium text-sm">
                             Hola, <span className="text-primary font-bold">{player.name}</span>
                         </p>
@@ -131,7 +156,7 @@ export default function PlayerManagePage() {
                         {paymentStatus === 'success' && (
                             <div className="p-3 bg-success/10 text-success text-sm font-bold rounded-xl flex items-center gap-3 animate-in fade-in zoom-in duration-500">
                                 <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
-                                <span>¡Pago registrado correctamente!</span>
+                                <span>¡Pago registrado exitosamente!</span>
                             </div>
                         )}
                         {paymentStatus === 'failure' && (
@@ -155,11 +180,33 @@ export default function PlayerManagePage() {
                             </div>
                             <div className="flex flex-col gap-1 p-3 bg-surface-dark/5 rounded-xl">
                                 <div className="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider">
-                                <DollarSignIcon className="w-4 h-4" /> Precio
+                                 Precio
                                 </div>
                                 <div className="font-bold text-success text-lg">
-                                ${match.pricePerPlayer}
+                                <span className="flex items-center gap-1">
+                                    <DollarSignIcon className="w-4 h-4" />
+                                    {match.pricePerPlayer}
+                                </span>
                                 </div>
+                            </div>
+                        </div>
+
+                         {/* Players Progress */}
+                        <div>
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-sm font-bold text-secondary flex items-center gap-2">
+                                <UsersIcon className="w-4 h-4" />
+                                Jugadores
+                                </span>
+                                <span className={`text-sm font-bold ${match.players.length >= match.maxPlayers ? 'text-danger' : 'text-success'}`}>
+                                {match.players.length} / {match.maxPlayers}
+                                </span>
+                            </div>
+                            <div className="w-full bg-secondary/20 h-2.5 rounded-full overflow-hidden mt-2">
+                                <div 
+                                className={`h-full transition-all duration-500 ${match.players.length >= match.maxPlayers ? 'bg-danger' : 'bg-success'}`} 
+                                style={{ width: `${progress}%` }}
+                                />
                             </div>
                         </div>
 
@@ -212,7 +259,7 @@ export default function PlayerManagePage() {
                         {!isMatchFinished && !player.hasPaid && (
                             <div className="text-center">
                                 <button 
-                                    onClick={handleUnsubscribe}
+                                    onClick={handleUnsubscribeClick}
                                     disabled={isDeleting}
                                     className="text-danger text-xs font-bold hover:underline flex items-center justify-center gap-1 mx-auto disabled:opacity-50"
                                 >
@@ -228,6 +275,36 @@ export default function PlayerManagePage() {
                     &copy; {new Date().getFullYear()} Cancha Leconte
                 </p>
             </main>
+
+            {/* Confirmation Modal */}
+            {showCancelConfirm && (
+                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm ${isClosingConfirm ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+                    <div className={`bg-surface border border-danger/30 shadow-2xl rounded-xl p-6 max-w-sm w-full text-center ${isClosingConfirm ? 'animate-scaleOut' : 'animate-scaleIn'}`}>
+                        <div className="mx-auto w-12 h-12 bg-danger/10 rounded-full flex items-center justify-center mb-4">
+                            <AlertTriangleIcon className="w-6 h-6 text-danger" />
+                        </div>
+                        <h3 className="text-xl font-bold text-primary mb-2">¿Darte de baja?</h3>
+                        <p className="text-secondary text-sm mb-6">
+                            Vas a liberar tu cupo en el partido <strong>{match.name}</strong>.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleCloseConfirm}
+                                className="flex-1 py-2.5 text-primary bg-surface-dark/10 hover:bg-surface-dark/20 rounded-lg transition-colors font-medium text-sm"
+                            >
+                                No, volver
+                            </button>
+                            <button
+                                onClick={confirmUnsubscribe}
+                                disabled={isDeleting}
+                                className="flex-1 py-2.5 bg-danger text-white rounded-lg font-bold hover:brightness-110 transition-all shadow-lg shadow-danger/20 text-sm disabled:opacity-50"
+                            >
+                                {isDeleting ? 'Borrando...' : 'Sí, bajarme'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

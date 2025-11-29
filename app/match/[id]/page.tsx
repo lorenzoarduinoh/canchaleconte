@@ -94,6 +94,7 @@ export default function MatchRegistration() {
   }
 
   const isFull = match.players.length >= match.maxPlayers;
+  const isFinished = match.status === MatchStatus.Finished;
   const progress = (match.players.length / match.maxPlayers) * 100;
 
   return (
@@ -113,11 +114,11 @@ export default function MatchRegistration() {
           
           {/* Header Card */}
           <div className="bg-surface-dark/5 p-6 border-b border-surface-dark/10 text-center">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-primary/5 text-primary mb-3">
+            <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-primary mb-3 ${isFinished ? 'bg-secondary/10 text-secondary' : 'bg-primary/5'}`}>
               {match.status.toUpperCase()}
             </span>
             <h2 className="text-3xl font-black text-primary leading-tight mb-2">{match.name}</h2>
-            <p className="text-secondary font-medium">
+            <p className="text-secondary font-medium text-sm">
               Inscríbete para confirmar tu lugar
             </p>
           </div>
@@ -138,10 +139,13 @@ export default function MatchRegistration() {
               </div>
               <div className="flex flex-col gap-1 p-3 bg-surface-dark/5 rounded-xl">
                 <div className="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider">
-                  <DollarSignIcon className="w-4 h-4" /> Precio
+                   Precio
                 </div>
                 <div className="font-bold text-success text-lg">
-                  ${match.pricePerPlayer}
+                  <span className="flex items-center gap-1">
+                    <DollarSignIcon className="w-4 h-4" />
+                    {match.pricePerPlayer}
+                  </span>
                 </div>
               </div>
             </div>
@@ -172,15 +176,20 @@ export default function MatchRegistration() {
                   {match.players.length} / {match.maxPlayers}
                 </span>
               </div>
-              <div className="w-full bg-surface-dark/10 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-secondary/20 h-2.5 rounded-full overflow-hidden mt-2">
                 <div 
                   className={`h-full transition-all duration-500 ${isFull ? 'bg-danger' : 'bg-success'}`} 
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              {isFull && !isRegistered && (
+              {isFull && !isRegistered && !isFinished && (
                 <p className="text-xs text-danger mt-2 font-medium text-center">
                   ¡El partido está completo! No se admiten más inscripciones.
+                </p>
+              )}
+              {isFinished && (
+                <p className="text-xs text-secondary mt-2 font-medium text-center">
+                  El partido ha finalizado.
                 </p>
               )}
             </div>
@@ -196,11 +205,11 @@ export default function MatchRegistration() {
                 <div>
                   <h3 className="text-xl font-bold text-primary">¡Estás inscripto!</h3>
                   <p className="text-secondary text-sm mt-1">
-                    Te enviamos un WhatsApp con los detalles.
+                    Te mandamos un WhatsApp con los detalles.
                   </p>
                 </div>
                 <div className="p-4 bg-surface-dark/5 rounded-xl text-sm text-secondary">
-                  Recuerda que puedes darte de baja desde el link que te enviamos si no puedes asistir.
+                  Podes darte de baja del partido desde el link que te mandamos (No lo hagas...)
                 </div>
               </div>
             ) : (
@@ -221,7 +230,7 @@ export default function MatchRegistration() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full bg-background border border-surface-dark/20 rounded-xl p-3 text-primary focus:ring-2 focus:ring-primary outline-none transition-all disabled:opacity-50"
-                    disabled={isSubmitting || isFull}
+                    disabled={isSubmitting || isFull || isFinished}
                   />
                 </div>
 
@@ -248,16 +257,16 @@ export default function MatchRegistration() {
                       setFormData({ ...formData, phone: val });
                     }}
                     className="w-full bg-background border border-surface-dark/20 rounded-xl p-3 text-primary focus:ring-2 focus:ring-primary outline-none transition-all disabled:opacity-50"
-                    disabled={isSubmitting || isFull}
+                    disabled={isSubmitting || isFull || isFinished}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || isFull}
+                  disabled={isSubmitting || isFull || isFinished}
                   className="w-full bg-primary text-surface font-bold py-3.5 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none"
                 >
-                  {isSubmitting ? 'Inscribiendo...' : isFull ? 'Cupos Agotados' : 'Confirmar Asistencia'}
+                  {isSubmitting ? 'Inscribiendo...' : isFull ? 'Cupos Agotados' : isFinished ? 'Partido Finalizado' : 'Confirmar Asistencia'}
                 </button>
               </form>
             )}
@@ -266,7 +275,7 @@ export default function MatchRegistration() {
         </div>
 
         <p className="text-center text-secondary text-xs mt-8 opacity-50">
-          &copy; {new Date().getFullYear()} Cancha Leconte. Todos los derechos reservados.
+          &copy; {new Date().getFullYear()} Cancha Leconte. Hecho por Lolo con la ayuda de la IA
         </p>
 
       </main>

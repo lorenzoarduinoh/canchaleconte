@@ -19,6 +19,8 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
+  const [isClosingConfirm, setIsClosingConfirm] = useState(false); // New state for confirmation modal
+
   const [resultInput, setResultInput] = useState(match.result || '');
 
   const [mvpInput, setMvpInput] = useState(match.mvp || '');
@@ -41,91 +43,127 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
 
 
 
-  const paidCount = match.players.filter(p => p.hasPaid).length;
+  const handleCloseConfirm = () => {
 
-  const revenue = paidCount * match.pricePerPlayer;
+    setIsClosingConfirm(true);
+
+    setTimeout(() => {
+
+      setShowCancelConfirm(false);
+
+      setIsClosingConfirm(false);
+
+    }, 200);
+
+  };
 
 
 
-  const handleTogglePaid = async (playerId: string) => {
+  const handleCancelMatchClick = () => {
 
-    const player = match.players.find(p => p.id === playerId);
+    setShowCancelConfirm(true);
 
-    if (!player) return;
+  };
 
 
 
-    const newStatus = !player.hasPaid;
+      const handleCancelMatch = () => {
+
+
+
+        onDeleteMatch(match.id);
+
+
+
+        // Close confirm modal first (optional, since parent closes anyway)
+
+
+
+        setShowCancelConfirm(false);
+
+
+
+        // Close main modal
+
+
+
+        handleClose();
+
+
+
+      };
+
+
 
     
 
-    // Optimistic update locally
 
-    const updatedPlayers = match.players.map(p => 
 
-      p.id === playerId ? { ...p, hasPaid: newStatus } : p
-
-    );
-
-    onUpdateMatch({ ...match, players: updatedPlayers });
+      const handleSaveDetails = () => {
 
 
 
-    // Persist to DB
-
-    const success = await matchService.updatePlayerPayment(playerId, newStatus);
-
-    if (!success) {
-
-        // Revert if failed (optional, but good practice)
-
-        onShowNotification('Error al actualizar el pago', 'error');
-
-        onUpdateMatch({ ...match, players: match.players }); // Revert to original
-
-    }
-
-  };
+        onUpdateMatch({
 
 
 
-  const handleSaveDetails = () => {
-
-    onUpdateMatch({
-
-      ...match,
-
-      result: resultInput,
-
-      mvp: mvpInput,
-
-      comments: commentsInput,
-
-      status: match.status === MatchStatus.Open && resultInput ? MatchStatus.Finished : match.status
-
-    });
-
-    onShowNotification('Cambios guardados exitosamente', 'success');
-
-    handleClose();
-
-  };
+          ...match,
 
 
 
-  const handleCancelMatch = () => {
-
-    onDeleteMatch(match.id);
-
-    setShowCancelConfirm(false);
-
-    handleClose();
-
-  };
+          result: resultInput,
 
 
 
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/match/${match.id}` : '';
+          mvp: mvpInput,
+
+
+
+          comments: commentsInput,
+
+
+
+          status: match.status === MatchStatus.Open && resultInput ? MatchStatus.Finished : match.status
+
+
+
+        });
+
+
+
+        onShowNotification('Cambios guardados exitosamente', 'success');
+
+
+
+        handleClose();
+
+
+
+      };
+
+
+
+    
+
+
+
+      // Derived state
+
+
+
+    const paidCount = match.players.filter(p => p.hasPaid).length;
+
+
+
+    const revenue = paidCount * match.pricePerPlayer;
+
+
+
+  
+
+
+
+    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/match/${match.id}` : '';
 
   const shareText = `⚽ *${match.name}*
 
@@ -236,7 +274,7 @@ Sumate acá: ${shareUrl}`;
             
             {match.status === MatchStatus.Open && (
               <button 
-                onClick={() => setShowCancelConfirm(true)}
+                onClick={handleCancelMatchClick}
                 className="flex items-center gap-2 px-4 py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger/20 transition-all font-medium ml-auto"
               >
                 <TrashIcon className="w-4 h-4" />
@@ -351,8 +389,8 @@ Sumate acá: ${shareUrl}`;
 
         {/* Confirmation Modal Overlay */}
         {showCancelConfirm && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface/90 backdrop-blur-sm rounded-xl">
-             <div className="bg-surface border border-danger/30 shadow-2xl rounded-xl p-6 max-w-sm w-full text-center animate-in fade-in zoom-in duration-200">
+          <div className={`absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface/90 backdrop-blur-sm rounded-xl ${isClosingConfirm ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+             <div className={`bg-surface border border-danger/30 shadow-2xl rounded-xl p-6 max-w-sm w-full text-center ${isClosingConfirm ? 'animate-scaleOut' : 'animate-scaleIn'}`}>
                 <div className="mx-auto w-12 h-12 bg-danger/10 rounded-full flex items-center justify-center mb-4">
                     <AlertTriangleIcon className="w-6 h-6 text-danger" />
                 </div>
@@ -362,7 +400,7 @@ Sumate acá: ${shareUrl}`;
                 </p>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => setShowCancelConfirm(false)}
+                        onClick={handleCloseConfirm}
                         className="flex-1 py-2.5 text-primary bg-surface-dark/10 hover:bg-surface-dark/20 rounded-lg transition-colors font-medium"
                     >
                         No, volver
