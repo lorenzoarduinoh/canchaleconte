@@ -7,6 +7,7 @@ import { CreateMatchModal } from '@/components/CreateMatchModal';
 import { PlusIcon, CalendarIcon, UsersIcon, DollarSignIcon, TrophyIcon, CheckCircleIcon, AlertTriangleIcon } from '@/components/Icons';
 import { matchService } from '@/services/matchService';
 import { updateMatchAction } from '@/app/actions';
+import { logout } from '@/app/login/actions';
 
 export default function Home() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -118,6 +119,11 @@ export default function Home() {
               <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-success to-info flex items-center justify-center text-white font-bold text-xs shadow-lg">
                 SA
               </div>
+              <form action={logout}>
+                <button className="text-xs font-medium text-secondary hover:text-danger transition-colors border border-surface-dark/20 px-3 py-1.5 rounded-lg hover:bg-danger/5">
+                    Cerrar Sesión
+                </button>
+              </form>
             </div>
           </div>
         </div>
