@@ -230,7 +230,7 @@ export default function MatchRegistration() {
                   <input
                     id="phone"
                     type="tel"
-                    placeholder="Ej: 11 1234-5678"
+                    placeholder="Ej: 3795123456"
                     value={formData.phone}
                     onChange={(e) => {
                       // Solo números
