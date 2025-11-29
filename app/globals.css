@@ -6,3 +6,53 @@
   --background: #f8fafc;
   --foreground: #0f172a;
 }
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out forwards;
+  }
+  
+  .animate-fadeOut {
+    animation: fadeOut 0.2s ease-in forwards;
+  }
+  
+  .animate-scaleIn {
+    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-scaleOut {
+    animation: scaleOut 0.2s ease-in forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes scaleOut {
+    from { 
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to { 
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+  }
+}

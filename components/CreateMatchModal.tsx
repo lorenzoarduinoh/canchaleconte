@@ -7,24 +7,49 @@ interface CreateMatchModalProps {
 }
 
 export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onCreate }) => {
-  const [formData, setFormData] = useState({
+  const [isClosing, setIsClosing] = useState(false);
+  const [formData, setFormData] = useState<{
+    name: string;
+    date: string;
+    time: string;
+    pricePerPlayer: number | string;
+    maxPlayers: number | string;
+    locationLink: string;
+  }>({
     name: '',
     date: '',
     time: '',
-    pricePerPlayer: 2500,
-    maxPlayers: 10,
+    pricePerPlayer: 5000,
+    maxPlayers: 16,
     locationLink: 'https://www.google.com/maps/search/?api=1&query=-34.603722,-58.381592' // Default dummy coords
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onCreate(formData);
-    onClose();
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200); // Match animation duration
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onCreate({
+        ...formData,
+        pricePerPlayer: Number(formData.pricePerPlayer),
+        maxPlayers: Number(formData.maxPlayers)
+    });
+    handleClose();
+  };
+
+  // Date validation logic
+  const now = new Date();
+  // Format YYYY-MM-DD manually to respect local time
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-surface w-full max-w-md rounded-xl shadow-xl border border-surface-dark/10 p-6">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm ${isClosing ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+      <div className={`bg-surface w-full max-w-md rounded-xl shadow-xl border border-surface-dark/10 p-6 ${isClosing ? 'animate-scaleOut' : 'animate-scaleIn'}`}>
         <h2 className="text-xl font-bold text-primary mb-4">Nuevo Partido</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,7 +70,8 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
               <label className="block text-sm font-medium text-secondary mb-1">Fecha</label>
               <input 
                 required
-                type="date" 
+                type="date"
+                min={todayStr}
                 className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 text-primary focus:ring-2 focus:ring-info outline-none"
                 value={formData.date}
                 onChange={(e) => setFormData({...formData, date: e.target.value})}
@@ -55,7 +81,8 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
               <label className="block text-sm font-medium text-secondary mb-1">Hora</label>
               <input 
                 required
-                type="time" 
+                type="time"
+                min={formData.date === todayStr ? currentTimeStr : undefined}
                 className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 text-primary focus:ring-2 focus:ring-info outline-none"
                 value={formData.time}
                 onChange={(e) => setFormData({...formData, time: e.target.value})}
@@ -70,10 +97,12 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
                 <span className="absolute left-3 top-2 text-secondary">$</span>
                 <input 
                   required
-                  type="number" 
+                  type="number"
+                  step={1000}
+                  min={0}
                   className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 pl-6 text-primary focus:ring-2 focus:ring-info outline-none"
                   value={formData.pricePerPlayer}
-                  onChange={(e) => setFormData({...formData, pricePerPlayer: Number(e.target.value)})}
+                  onChange={(e) => setFormData({...formData, pricePerPlayer: e.target.value === '' ? '' : Number(e.target.value)})}
                 />
               </div>
             </div>
@@ -81,10 +110,11 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
               <label className="block text-sm font-medium text-secondary mb-1">Cupos</label>
               <input 
                 required
-                type="number" 
+                type="number"
+                min={1}
                 className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 text-primary focus:ring-2 focus:ring-info outline-none"
                 value={formData.maxPlayers}
-                onChange={(e) => setFormData({...formData, maxPlayers: Number(e.target.value)})}
+                onChange={(e) => setFormData({...formData, maxPlayers: e.target.value === '' ? '' : Number(e.target.value)})}
               />
             </div>
           </div>
@@ -103,7 +133,7 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
           <div className="flex gap-3 mt-6">
             <button 
               type="button" 
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1 py-2 text-primary hover:bg-surface-dark/10 rounded-lg transition-colors"
             >
               Cancelar

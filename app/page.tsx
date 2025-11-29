@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Match, MatchStatus, DashboardStats } from '@/types';
 import { MatchDetail } from '@/components/MatchDetail';
 import { CreateMatchModal } from '@/components/CreateMatchModal';
-import { PlusIcon, CalendarIcon, UsersIcon, DollarSignIcon, TrophyIcon, CheckCircleIcon, AlertTriangleIcon } from '@/components/Icons';
+import { PlusIcon, CalendarIcon, UsersIcon, DollarSignIcon, TrophyIcon, CheckCircleIcon, AlertTriangleIcon, SoccerBallIcon } from '@/components/Icons';
 import { matchService } from '@/services/matchService';
 import { updateMatchAction } from '@/app/actions';
 import { logout } from '@/app/login/actions';
@@ -116,11 +116,8 @@ export default function Home() {
               CANCHA <span className="text-success">LECONTE</span>
             </h1>
             <div className="flex items-center gap-4">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-success to-info flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                SA
-              </div>
               <form action={logout}>
-                <button className="text-xs font-medium text-secondary hover:text-danger transition-colors border border-surface-dark/20 px-3 py-1.5 rounded-lg hover:bg-danger/5">
+                <button className="text-sm font-medium text-secondary hover:text-danger transition-colors border border-surface-dark/20 px-4 py-2 rounded-lg hover:bg-danger/5">
                     Cerrar Sesión
                 </button>
               </form>
@@ -134,8 +131,8 @@ export default function Home() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-primary">Hola, Santiago y Agustín</h2>
-            <p className="text-secondary mt-1">Aquí tienen el resumen de la quinta.</p>
+            <h2 className="text-3xl font-bold text-primary">Hola, Golfi y Lecon</h2>
+            <p className="text-secondary mt-1">Acá va un resumen de la cancha...</p>
           </div>
           <button 
             onClick={() => setIsCreateModalOpen(true)}
@@ -164,7 +161,7 @@ export default function Home() {
             value={stats.activePlayers} 
           />
           <StatCard 
-            icon={<CalendarIcon className="text-danger" />} 
+            icon={<SoccerBallIcon className="text-danger" />} 
             label="Goles Totales" 
             value={stats.totalGoals} 
           />

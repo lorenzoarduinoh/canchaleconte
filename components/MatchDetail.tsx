@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { Match, Player, MatchStatus } from '../types';
-import { generateMatchSummary } from '../services/geminiService';
-import { BotIcon, CheckCircleIcon, ShareIcon, UsersIcon, MapPinIcon, TrashIcon, AlertTriangleIcon } from './Icons';
+import { CheckCircleIcon, ShareIcon, UsersIcon, MapPinIcon, TrashIcon, AlertTriangleIcon } from './Icons';
 import { matchService } from '../services/matchService';
 
 interface MatchDetailProps {
@@ -15,104 +14,203 @@ interface MatchDetailProps {
 }
 
 export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpdateMatch, onDeleteMatch, onShowNotification }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+
+  const [isClosing, setIsClosing] = useState(false);
+
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
   const [resultInput, setResultInput] = useState(match.result || '');
+
   const [mvpInput, setMvpInput] = useState(match.mvp || '');
+
   const [commentsInput, setCommentsInput] = useState(match.comments || '');
 
+
+
+  const handleClose = () => {
+
+    setIsClosing(true);
+
+    setTimeout(() => {
+
+      onClose();
+
+    }, 200);
+
+  };
+
+
+
   const paidCount = match.players.filter(p => p.hasPaid).length;
+
   const revenue = paidCount * match.pricePerPlayer;
 
+
+
   const handleTogglePaid = async (playerId: string) => {
+
     const player = match.players.find(p => p.id === playerId);
+
     if (!player) return;
 
+
+
     const newStatus = !player.hasPaid;
+
     
+
     // Optimistic update locally
+
     const updatedPlayers = match.players.map(p => 
+
       p.id === playerId ? { ...p, hasPaid: newStatus } : p
+
     );
+
     onUpdateMatch({ ...match, players: updatedPlayers });
 
+
+
     // Persist to DB
+
     const success = await matchService.updatePlayerPayment(playerId, newStatus);
+
     if (!success) {
+
         // Revert if failed (optional, but good practice)
+
         onShowNotification('Error al actualizar el pago', 'error');
+
         onUpdateMatch({ ...match, players: match.players }); // Revert to original
+
     }
+
   };
 
-  const handleGenerateSummary = async () => {
-    setIsGenerating(true);
-    const summary = await generateMatchSummary(match.name, resultInput, mvpInput, commentsInput);
-    setCommentsInput(summary);
-    setIsGenerating(false);
-  };
+
 
   const handleSaveDetails = () => {
+
     onUpdateMatch({
+
       ...match,
+
       result: resultInput,
+
       mvp: mvpInput,
+
       comments: commentsInput,
+
       status: match.status === MatchStatus.Open && resultInput ? MatchStatus.Finished : match.status
+
     });
+
     onShowNotification('Cambios guardados exitosamente', 'success');
-    onClose();
+
+    handleClose();
+
   };
+
+
 
   const handleCancelMatch = () => {
+
     onDeleteMatch(match.id);
+
     setShowCancelConfirm(false);
-    onClose();
+
+    handleClose();
+
   };
 
+
+
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/match/${match.id}` : '';
+
   const shareText = `⚽ *${match.name}*
+
 📅 ${new Date(match.date).toLocaleDateString()} a las ${match.time}
+
 📍 Cancha Leconte
-💰 $${match.pricePerPlayer}
+
+💰 ${match.pricePerPlayer}
+
+
 
 Sumate acá: ${shareUrl}`;
 
+
+
   const handleShare = () => {
+
     const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
     window.open(url, '_blank');
+
   };
+
+
 
   const getStatusBadge = (status: MatchStatus) => {
+
     switch (status) {
+
       case MatchStatus.Open:
+
         return 'bg-success/10 text-success';
+
       case MatchStatus.Canceled:
+
         return 'bg-danger/10 text-danger';
+
       case MatchStatus.Finished:
+
         return 'bg-secondary/10 text-secondary';
+
       default:
+
         return 'bg-secondary/10 text-secondary';
+
     }
+
   };
 
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative bg-surface w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border border-surface-dark/10">
+
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm ${isClosing ? 'animate-fadeOut' : 'animate-fadeIn'}`}>
+
+      <div className={`relative bg-surface w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border border-surface-dark/10 ${isClosing ? 'animate-scaleOut' : 'animate-scaleIn'}`}>
+
         
+
         {/* Header */}
+
         <div className="sticky top-0 bg-surface z-10 p-6 border-b border-surface-dark/10 flex justify-between items-start">
+
           <div>
+
             <h2 className="text-2xl font-bold text-primary">{match.name}</h2>
+
             <div className="flex items-center gap-2 mt-1 text-secondary text-sm">
+
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(match.status)}`}>
+
                 {match.status}
+
               </span>
+
               <span>•</span>
+
               <span>{new Date(match.date).toLocaleDateString()} - {match.time}hs</span>
+
             </div>
+
           </div>
-          <button onClick={onClose} className="text-secondary hover:text-primary">✕</button>
+
+          <button onClick={handleClose} className="text-secondary hover:text-primary">✕</button>
+
         </div>
 
         <div className="p-6 space-y-8">
@@ -230,19 +328,11 @@ Sumate acá: ${shareUrl}`;
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-secondary">Comentarios del Partido</label>
-                  <button 
-                    onClick={handleGenerateSummary}
-                    disabled={isGenerating}
-                    className="text-xs flex items-center gap-1 text-info hover:text-info/80 font-medium disabled:opacity-50"
-                  >
-                    <BotIcon className="w-3 h-3" />
-                    {isGenerating ? 'Generando...' : 'Generar resumen con IA'}
-                  </button>
                 </div>
                 <textarea 
                   value={commentsInput}
                   onChange={(e) => setCommentsInput(e.target.value)}
-                  placeholder="Escribe un comentario o usa la IA para generar uno..."
+                  placeholder="Escribe un comentario... (Ej: El arbitraje favorecio a los primos... de vuelta)"
                   rows={3}
                   className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 text-primary focus:ring-2 focus:ring-info outline-none resize-none"
                 />
