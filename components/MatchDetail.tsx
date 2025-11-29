@@ -59,15 +59,107 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
 
 
 
-  const handleCancelMatchClick = () => {
-
-    setShowCancelConfirm(true);
-
-  };
+    const handleCancelMatchClick = () => {
 
 
 
-      const handleCancelMatch = () => {
+      setShowCancelConfirm(true);
+
+
+
+    };
+
+
+
+  
+
+
+
+    const handleTogglePaid = async (playerId: string) => {
+
+
+
+      const player = match.players.find(p => p.id === playerId);
+
+
+
+      if (!player) return;
+
+
+
+  
+
+
+
+      const newStatus = !player.hasPaid;
+
+
+
+      
+
+
+
+      // Optimistic update locally
+
+
+
+      const updatedPlayers = match.players.map(p => 
+
+
+
+        p.id === playerId ? { ...p, hasPaid: newStatus } : p
+
+
+
+      );
+
+
+
+      onUpdateMatch({ ...match, players: updatedPlayers });
+
+
+
+  
+
+
+
+      // Persist to DB
+
+
+
+      const success = await matchService.updatePlayerPayment(playerId, newStatus);
+
+
+
+      if (!success) {
+
+
+
+          // Revert if failed
+
+
+
+          onShowNotification('Error al actualizar el pago', 'error');
+
+
+
+          onUpdateMatch({ ...match, players: match.players }); // Revert to original
+
+
+
+      }
+
+
+
+    };
+
+
+
+  
+
+
+
+    const handleCancelMatch = () => {
 
 
 
