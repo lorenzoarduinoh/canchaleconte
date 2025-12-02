@@ -184,7 +184,7 @@ export default function Home() {
                   onClick={() => setSelectedMatch(match)}
                   className="group bg-surface border border-surface-dark/10 rounded-2xl p-5 cursor-pointer hover:border-success/50 hover:shadow-lg transition-all"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${
                         match.status === MatchStatus.Finished ? 'bg-surface-dark text-secondary' : 
@@ -206,24 +206,29 @@ export default function Home() {
                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeStyles(match.status)}`}>
                           {match.status.toUpperCase()}
                         </span>
-                        
-                        {match.status === MatchStatus.Finished && (match.score_a !== undefined && match.score_a !== null) && (match.score_b !== undefined && match.score_b !== null) ? (
-                            <div className="mt-2 flex flex-col items-end">
-                                <div className="text-sm font-bold flex items-center gap-2">
-                                    <span className={match.score_a > match.score_b ? 'text-success' : match.score_a < match.score_b ? 'text-secondary' : 'text-warning'}>
-                                        <span className={match.score_a < match.score_b ? 'line-through opacity-70' : ''}>{match.team_a || 'Equipo A'}</span> <span className="text-lg ml-1">{match.score_a}</span>
-                                    </span>
-                                    <span className="text-secondary font-light text-xs">vs</span>
-                                    <span className={match.score_b > match.score_a ? 'text-success' : match.score_b < match.score_a ? 'text-secondary' : 'text-warning'}>
-                                        <span className="text-lg mr-1">{match.score_b}</span> <span className={match.score_b < match.score_a ? 'line-through opacity-70' : ''}>{match.team_b || 'Equipo B'}</span>
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            match.result && match.status === MatchStatus.Finished && <span className="text-sm font-bold text-primary mt-1">{match.result}</span>
-                        )}
                     </div>
                   </div>
+
+                  {/* Match Result Section (Full Width) */}
+                  {match.status === MatchStatus.Finished && (match.score_a !== undefined && match.score_a !== null) && (match.score_b !== undefined && match.score_b !== null) ? (
+                      <div className="mt-2 mb-4 p-3 bg-surface-dark/5 rounded-xl border border-surface-dark/10 flex items-center justify-center">
+                          <div className="text-base font-bold flex items-center gap-4">
+                              <span className={`flex items-center gap-2 ${match.score_a > match.score_b ? 'text-success' : match.score_a < match.score_b ? 'text-secondary' : 'text-warning'}`}>
+                                  <span className={match.score_a < match.score_b ? 'line-through opacity-70' : ''}>{match.team_a || 'Equipo A'}</span> <span className="text-xl">{match.score_a}</span>
+                              </span>
+                              <span className="text-secondary font-light text-xs uppercase tracking-widest">VS</span>
+                              <span className={`flex items-center gap-2 ${match.score_b > match.score_a ? 'text-success' : match.score_b < match.score_a ? 'text-secondary' : 'text-warning'}`}>
+                                  <span className="text-xl">{match.score_b}</span> <span className={match.score_b < match.score_a ? 'line-through opacity-70' : ''}>{match.team_b || 'Equipo B'}</span>
+                              </span>
+                          </div>
+                      </div>
+                  ) : (
+                      match.result && match.status === MatchStatus.Finished && (
+                        <div className="mt-2 mb-4 p-3 bg-surface-dark/5 rounded-xl border border-surface-dark/10 text-center">
+                            <span className="text-sm font-bold text-primary">{match.result}</span>
+                        </div>
+                      )
+                  )}
                   
                   {/* Mini Progress Bar for Players */}
                   {match.status !== MatchStatus.Canceled && (
