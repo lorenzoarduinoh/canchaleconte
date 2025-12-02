@@ -21,7 +21,7 @@ export const CreateMatchModal: React.FC<CreateMatchModalProps> = ({ onClose, onC
     time: '',
     pricePerPlayer: 5000,
     maxPlayers: 16,
-    locationLink: 'https://www.google.com/maps/search/?api=1&query=-34.603722,-58.381592' // Default dummy coords
+    locationLink: 'https://maps.app.goo.gl/HkvCMsKvaMeDvaNa8?g_st=iw' 
   });
 
   const handleClose = () => {

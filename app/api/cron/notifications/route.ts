@@ -62,7 +62,7 @@ export async function GET() {
                                  player.phone,
                                  match.name,
                                  match.time,
-                                 match.location_link || 'https://maps.google.com'
+                                 match.location_link || 'https://maps.app.goo.gl/HkvCMsKvaMeDvaNa8?g_st=iw'
                              );
                          }
                      }
