@@ -23,7 +23,11 @@ export interface Match {
   locationLink: string;
   status: MatchStatus;
   players: Player[];
-  result?: string;
+  result?: string; // Deprecated
+  team_a?: string;
+  team_b?: string;
+  score_a?: number | null;
+  score_b?: number | null;
   comments?: string;
   mvp?: string; // "Lolo"
 }

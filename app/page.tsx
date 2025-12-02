@@ -206,7 +206,22 @@ export default function Home() {
                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeStyles(match.status)}`}>
                           {match.status.toUpperCase()}
                         </span>
-                        {match.result && match.status === MatchStatus.Finished && <span className="text-sm font-bold text-primary mt-1">{match.result}</span>}
+                        
+                        {match.status === MatchStatus.Finished && (match.score_a !== undefined && match.score_a !== null) && (match.score_b !== undefined && match.score_b !== null) ? (
+                            <div className="mt-2 flex flex-col items-end">
+                                <div className="text-sm font-bold flex items-center gap-2">
+                                    <span className={match.score_a > match.score_b ? 'text-success' : match.score_a < match.score_b ? 'text-secondary' : 'text-warning'}>
+                                        <span className={match.score_a < match.score_b ? 'line-through opacity-70' : ''}>{match.team_a || 'Equipo A'}</span> <span className="text-lg ml-1">{match.score_a}</span>
+                                    </span>
+                                    <span className="text-secondary font-light text-xs">vs</span>
+                                    <span className={match.score_b > match.score_a ? 'text-success' : match.score_b < match.score_a ? 'text-secondary' : 'text-warning'}>
+                                        <span className="text-lg mr-1">{match.score_b}</span> <span className={match.score_b < match.score_a ? 'line-through opacity-70' : ''}>{match.team_b || 'Equipo B'}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            match.result && match.status === MatchStatus.Finished && <span className="text-sm font-bold text-primary mt-1">{match.result}</span>
+                        )}
                     </div>
                   </div>
                   

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Match, Player, MatchStatus } from '../types';
-import { CheckCircleIcon, ShareIcon, UsersIcon, MapPinIcon, TrashIcon, AlertTriangleIcon } from './Icons';
+import { CheckCircleIcon, ShareIcon, UsersIcon, MapPinIcon, TrashIcon, AlertTriangleIcon, EditIcon } from './Icons';
 import { matchService } from '../services/matchService';
 
 interface MatchDetailProps {
@@ -21,13 +21,13 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
 
   const [isClosingConfirm, setIsClosingConfirm] = useState(false); // New state for confirmation modal
 
-  const [resultInput, setResultInput] = useState(match.result || '');
+  const [teamA, setTeamA] = useState(match.team_a || 'Equipo A');
+  const [teamB, setTeamB] = useState(match.team_b || 'Equipo B');
+  const [scoreA, setScoreA] = useState(match.score_a?.toString() || '');
+  const [scoreB, setScoreB] = useState(match.score_b?.toString() || '');
 
   const [mvpInput, setMvpInput] = useState(match.mvp || '');
-
   const [commentsInput, setCommentsInput] = useState(match.comments || '');
-
-
 
   const handleClose = () => {
 
@@ -191,47 +191,29 @@ export const MatchDetail: React.FC<MatchDetailProps> = ({ match, onClose, onUpda
 
 
 
-      const handleSaveDetails = () => {
+  const handleSaveDetails = () => {
+    const finalScoreA = scoreA !== '' ? parseInt(scoreA) : null;
+    const finalScoreB = scoreB !== '' ? parseInt(scoreB) : null;
+    
+    // Legacy string format just in case
+    const resultStr = finalScoreA !== null && finalScoreB !== null 
+        ? `${finalScoreA} - ${finalScoreB}` 
+        : '';
 
-
-
-        onUpdateMatch({
-
-
-
-          ...match,
-
-
-
-          result: resultInput,
-
-
-
-          mvp: mvpInput,
-
-
-
-          comments: commentsInput,
-
-
-
-          status: match.status === MatchStatus.Open && resultInput ? MatchStatus.Finished : match.status
-
-
-
-        });
-
-
-
-        onShowNotification('Cambios guardados exitosamente', 'success');
-
-
-
-        handleClose();
-
-
-
-      };
+    onUpdateMatch({
+      ...match,
+      team_a: teamA,
+      team_b: teamB,
+      score_a: finalScoreA,
+      score_b: finalScoreB,
+      result: resultStr,
+      mvp: mvpInput,
+      comments: commentsInput,
+      status: match.status === MatchStatus.Open && finalScoreA !== null && finalScoreB !== null ? MatchStatus.Finished : match.status
+    });
+    onShowNotification('Cambios guardados exitosamente', 'success');
+    handleClose();
+  };
 
 
 
@@ -432,16 +414,46 @@ Sumate acá: ${shareUrl}`;
             <div className="border-t border-surface-dark/10 pt-6">
               <h3 className="text-lg font-semibold text-primary mb-4">Gestión Post-Partido</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-secondary mb-1">Resultado</label>
-                  <input 
-                    type="text" 
-                    value={resultInput}
-                    onChange={(e) => setResultInput(e.target.value)}
-                    placeholder="Ej: 5 - 4"
-                    className="w-full bg-background border border-surface-dark/20 rounded-lg p-2 text-primary focus:ring-2 focus:ring-info outline-none"
-                  />
+                  <label className="block text-sm font-medium text-secondary mb-2">Resultado</label>
+                  <div className="flex items-center gap-2 bg-surface-dark/20 p-3 rounded-xl border border-surface-dark/30 shadow-inner">
+                    <div className="flex-1 relative group">
+                        <input 
+                            type="text" 
+                            value={teamA}
+                            onChange={(e) => setTeamA(e.target.value)}
+                            className="w-full bg-transparent border-b border-surface-dark/30 p-1 pr-6 text-center font-bold text-primary focus:border-info outline-none text-sm transition-colors placeholder:text-secondary/50"
+                            placeholder="Equipo A"
+                        />
+                        <EditIcon className="w-3 h-3 text-secondary absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
+                    </div>
+                    <input 
+                        type="number" 
+                        value={scoreA}
+                        onChange={(e) => setScoreA(e.target.value)}
+                        className="w-12 bg-surface border border-surface-dark/30 rounded-lg p-2 text-center font-black text-xl text-primary focus:ring-2 focus:ring-info outline-none shadow-sm"
+                        placeholder="-"
+                    />
+                    <span className="text-secondary font-bold text-xs opacity-70">VS</span>
+                    <input 
+                        type="number" 
+                        value={scoreB}
+                        onChange={(e) => setScoreB(e.target.value)}
+                        className="w-12 bg-surface border border-surface-dark/30 rounded-lg p-2 text-center font-black text-xl text-primary focus:ring-2 focus:ring-info outline-none shadow-sm"
+                        placeholder="-"
+                    />
+                    <div className="flex-1 relative group">
+                        <input 
+                            type="text" 
+                            value={teamB}
+                            onChange={(e) => setTeamB(e.target.value)}
+                            className="w-full bg-transparent border-b border-surface-dark/30 p-1 pr-6 text-center font-bold text-primary focus:border-info outline-none text-sm transition-colors placeholder:text-secondary/50"
+                            placeholder="Equipo B"
+                        />
+                        <EditIcon className="w-3 h-3 text-secondary absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-secondary mb-1">Figura (MVP)</label>

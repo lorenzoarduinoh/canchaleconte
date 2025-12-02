@@ -12,6 +12,10 @@ const mapMatchFromDB = (data: any): Match => ({
   locationLink: data.location_link,
   status: data.status as MatchStatus,
   result: data.result,
+  team_a: data.team_a,
+  team_b: data.team_b,
+  score_a: data.score_a,
+  score_b: data.score_b,
   mvp: data.mvp,
   comments: data.comments,
   players: data.players ? data.players.map(mapPlayerFromDB) : []
@@ -98,6 +102,10 @@ export const matchService = {
         location_link: match.locationLink,
         status: match.status,
         result: match.result,
+        team_a: match.team_a,
+        team_b: match.team_b,
+        score_a: match.score_a,
+        score_b: match.score_b,
         mvp: match.mvp,
         comments: match.comments
       })
